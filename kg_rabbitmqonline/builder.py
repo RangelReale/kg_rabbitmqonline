@@ -371,12 +371,12 @@ class RabbitMQOnlineBuilder(Builder):
                     {'op': 'replace', 'path': '/spec/template/spec/volumes/2',
                      'value': KDataHelper_Volume.info(base_value={
                             'name': 'rabbitmq-data',
-                    }, kdata=self.option_get('kubernetes.volumes.data'))},
+                    }, value=self.option_get('kubernetes.volumes.data'))},
                     {
                         'op': 'replace', 'path': '/spec/template/spec/containers/0/env/0',
                         'value': KDataHelper_Env.info(base_value={
                             'name': 'RABBITMQ_DEFAULT_PASS'
-                        }, kdata=self.option_get('config.admin.password'), default_value={
+                        }, value=self.option_get('config.admin.password'), default_value={
                             'valueFrom': {
                                 'secretKeyRef': {
                                     'name': self.object_name('config-secret'),
@@ -389,7 +389,7 @@ class RabbitMQOnlineBuilder(Builder):
                         'op': 'replace', 'path': '/spec/template/spec/containers/0/env/1',
                         'value': KDataHelper_Env.info(base_value={
                             'name': 'RABBITMQ_DEFAULT_USER'
-                        }, kdata=self.option_get('config.admin.username'), default_value={
+                        }, value=self.option_get('config.admin.username'), default_value={
                             'valueFrom': {
                                 'secretKeyRef': {
                                     'name': self.object_name('config-secret'),
@@ -402,7 +402,7 @@ class RabbitMQOnlineBuilder(Builder):
                         'op': 'replace', 'path': '/spec/template/spec/containers/0/env/2',
                         'value': KDataHelper_Env.info(base_value={
                             'name': 'RABBITMQ_ERLANG_COOKIE'
-                        }, kdata=self.option_get('config.erlang_cookie'), default_value={
+                        }, value=self.option_get('config.erlang_cookie'), default_value={
                             'valueFrom': {
                                 'secretKeyRef': {
                                     'name': self.object_name('config-secret'),
@@ -434,7 +434,7 @@ class RabbitMQOnlineBuilder(Builder):
                         'op': 'add', 'path': '/spec/template/spec/volumes',
                         'value': KDataHelper_Volume.info(base_value={
                             'name': 'rabbitmq-config-load-definition',
-                        }, kdata=self.option_get('config.load_definitions'), default_value={
+                        }, kdata_value=self.option_get('config.load_definitions'), default_value={
                             'secret': {
                                 'secretName': self.object_name('config-secret'),
                                 'items': [{
