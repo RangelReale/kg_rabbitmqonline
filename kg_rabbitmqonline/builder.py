@@ -434,7 +434,7 @@ class RabbitMQOnlineBuilder(Builder):
                         'op': 'add', 'path': '/spec/template/spec/volumes',
                         'value': KDataHelper_Volume.info(base_value={
                             'name': 'rabbitmq-config-load-definition',
-                        }, kdata_value=self.option_get('config.load_definitions'), default_value={
+                        }, value_if_kdata=self.option_get('config.load_definitions'), default_value={
                             'secret': {
                                 'secretName': self.object_name('config-secret'),
                                 'items': [{
