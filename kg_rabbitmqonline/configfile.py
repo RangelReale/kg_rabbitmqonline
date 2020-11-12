@@ -26,8 +26,8 @@ class RabbitMQOnlineConfigFileOptions(Options):
           - set cluster formation on config file
           - bool
           - ```True```
-        * - config.extra_config
-          - extra config to add fo config file
+        * - config.merge_config
+          - extra config to merge fo config file
           - Mapping
           - ```{}```
     """
@@ -43,7 +43,7 @@ class RabbitMQOnlineConfigFileOptions(Options):
                 'cluster_formation': OptionDef(required=True, default_value=True, allowed_types=[bool]),
             },
             'config': {
-                'extra_config': OptionDef(default_value={}, allowed_types=[Mapping]),
+                'merge_config': OptionDef(default_value={}, allowed_types=[Mapping]),
             },
         }
 
@@ -86,8 +86,7 @@ class RabbitMQOnlineConfigFile(ConfigFile):
                 'load_definitions': '/etc/rabbitmq-load-definition/load_definition.json',
             })
 
-        extra_config = self.option_get('config.extra_config')
-        if extra_config is not None:
-            ret.update(extra_config)
+        if self.option_get('config.merge_config') is not None:
+            Merger.merge(ret, self.option_get('config.merge_config'))
 
         return ConfigFileOutput_DictSingleLevel(ret)
