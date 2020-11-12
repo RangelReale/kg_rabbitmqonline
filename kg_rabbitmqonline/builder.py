@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any, Sequence
 
-import jsonpatchext
+import jsonpatchext # type: ignore
 import requests
 import yaml
 from kubragen import KubraGen
@@ -100,18 +100,18 @@ class RabbitMQOnlineBuilder(Builder):
 
     SOURCE_NAME = 'kg_rabbitmqonline'
 
-    BUILD_ACCESSCONTROL: TBuild = 'accesscontrol'
-    BUILD_CONFIG: TBuild = 'config'
-    BUILD_SERVICE: TBuild = 'service'
+    BUILD_ACCESSCONTROL = TBuild('accesscontrol')
+    BUILD_CONFIG = TBuild('config')
+    BUILD_SERVICE = TBuild('service')
 
-    BUILDITEM_SERVICE_ACCOUNT: TBuildItem = 'service-account'
-    BUILDITEM_ROLE: TBuildItem = 'role'
-    BUILDITEM_ROLE_BINDING: TBuildItem = 'role-binding'
-    BUILDITEM_CONFIG: TBuildItem = 'config'
-    BUILDITEM_CONFIG_SECRET: TBuildItem = 'config-secret'
-    BUILDITEM_SERVICE_HEADLESS: TBuildItem = 'service-headless'
-    BUILDITEM_STATEFULSET: TBuildItem = 'statefulset'
-    BUILDITEM_SERVICE: TBuildItem = 'service'
+    BUILDITEM_SERVICE_ACCOUNT = TBuildItem('service-account')
+    BUILDITEM_ROLE = TBuildItem('role')
+    BUILDITEM_ROLE_BINDING = TBuildItem('role-binding')
+    BUILDITEM_CONFIG = TBuildItem('config')
+    BUILDITEM_CONFIG_SECRET = TBuildItem('config-secret')
+    BUILDITEM_SERVICE_HEADLESS = TBuildItem('service-headless')
+    BUILDITEM_STATEFULSET = TBuildItem('statefulset')
+    BUILDITEM_SERVICE = TBuildItem('service')
 
     def __init__(self, kubragen: KubraGen, options: Optional[RabbitMQOnlineOptions] = None):
         super().__init__(kubragen)
@@ -234,37 +234,38 @@ class RabbitMQOnlineBuilder(Builder):
         if self.option_get('config.authorization.roles_bind') is not False:
             must_have.append(self.BUILDITEM_ROLE_BINDING)
 
-        for item in self._downloadedfiles['rbac.yaml']:
-            ritem = item
-            if ritem['kind'] == 'ServiceAccount':
-                if self.option_get('config.authorization.serviceaccount_create') is not False:
-                    ritem = Object(jsonpatchext.apply_patch(ritem, [
-                        {'op': 'check', 'path': '/metadata/name', 'cmp': 'equals', 'value': 'rabbitmq'},
-                        {'op': 'check', 'path': '/metadata/namespace', 'cmp': 'equals', 'value': 'test-rabbitmq'},
-                        {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('service-account')},
-                        {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
-                    ], in_place=False), name=self.BUILDITEM_SERVICE_ACCOUNT, source=self.SOURCE_NAME,
-                                   instance=self.basename())
-                    ret.append(ritem)
-            elif ritem['kind'] == 'Role':
-                if self.option_get('config.authorization.roles_create') is not False:
-                    ritem = Object(jsonpatchext.apply_patch(ritem, [
-                        {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('role')},
-                        {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
-                    ], in_place=False), name=self.BUILDITEM_ROLE, source=self.SOURCE_NAME, instance=self.basename())
-                    ret.append(ritem)
-            elif ritem['kind'] == 'RoleBinding':
-                if self.option_get('config.authorization.roles_bind') is not False:
-                    ritem = Object(jsonpatchext.apply_patch(ritem, [
-                        {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('role-binding')},
-                        {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
-                        {'op': 'replace', 'path': '/subjects/0/name', 'value': self.object_name('service-account')},
-                        {'op': 'replace', 'path': '/roleRef/name', 'value': self.object_name('role')},
-                    ], in_place=False), name=self.BUILDITEM_ROLE_BINDING, source=self.SOURCE_NAME,
-                                   instance=self.basename())
-                    ret.append(ritem)
-            else:
-                raise InvalidNameError('Unknown item kind in rbac.yaml: "{}"'.format(ritem['kind']))
+        if self._downloadedfiles is not None:
+            for item in self._downloadedfiles['rbac.yaml']:
+                ritem = item
+                if ritem['kind'] == 'ServiceAccount':
+                    if self.option_get('config.authorization.serviceaccount_create') is not False:
+                        ritem = Object(jsonpatchext.apply_patch(ritem, [
+                            {'op': 'check', 'path': '/metadata/name', 'cmp': 'equals', 'value': 'rabbitmq'},
+                            {'op': 'check', 'path': '/metadata/namespace', 'cmp': 'equals', 'value': 'test-rabbitmq'},
+                            {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('service-account')},
+                            {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
+                        ], in_place=False), name=self.BUILDITEM_SERVICE_ACCOUNT, source=self.SOURCE_NAME,
+                                       instance=self.basename())
+                        ret.append(ritem)
+                elif ritem['kind'] == 'Role':
+                    if self.option_get('config.authorization.roles_create') is not False:
+                        ritem = Object(jsonpatchext.apply_patch(ritem, [
+                            {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('role')},
+                            {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
+                        ], in_place=False), name=self.BUILDITEM_ROLE, source=self.SOURCE_NAME, instance=self.basename())
+                        ret.append(ritem)
+                elif ritem['kind'] == 'RoleBinding':
+                    if self.option_get('config.authorization.roles_bind') is not False:
+                        ritem = Object(jsonpatchext.apply_patch(ritem, [
+                            {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('role-binding')},
+                            {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
+                            {'op': 'replace', 'path': '/subjects/0/name', 'value': self.object_name('service-account')},
+                            {'op': 'replace', 'path': '/roleRef/name', 'value': self.object_name('role')},
+                        ], in_place=False), name=self.BUILDITEM_ROLE_BINDING, source=self.SOURCE_NAME,
+                                       instance=self.basename())
+                        ret.append(ritem)
+                else:
+                    raise InvalidNameError('Unknown item kind in rbac.yaml: "{}"'.format(ritem['kind']))
 
         self._check_object_must_have(ret, must_have, 'rbac.yaml')
         return ret
@@ -273,18 +274,20 @@ class RabbitMQOnlineBuilder(Builder):
         self._checkdownloaded()
 
         ret = []
-        for item in self._downloadedfiles['configmap.yaml']:
-            ritem = item
-            if ritem['kind'] == 'ConfigMap':
-                ritem = Object(jsonpatchext.apply_patch(ritem, [
-                    {'op': 'check', 'path': '/metadata/name', 'cmp': 'equals', 'value': 'rabbitmq-config'},
-                    {'op': 'check', 'path': '/metadata/namespace', 'cmp': 'equals', 'value': 'test-rabbitmq'},
-                    {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('config')},
-                    {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
-                    {'op': 'replace', 'path': '/data/enabled_plugins', 'value': LiteralStr('[{}].'.format(', '.join(self.option_get('config.enabled_plugins'))))},
-                    {'op': 'replace', 'path': '/data/rabbitmq.conf', 'value': LiteralStr(self.configfile_get())},
-                ], in_place=False), name=self.BUILDITEM_CONFIG, source=self.SOURCE_NAME, instance=self.basename())
-            ret.append(ritem)
+
+        if self._downloadedfiles is not None:
+            for item in self._downloadedfiles['configmap.yaml']:
+                ritem = item
+                if ritem['kind'] == 'ConfigMap':
+                    ritem = Object(jsonpatchext.apply_patch(ritem, [
+                        {'op': 'check', 'path': '/metadata/name', 'cmp': 'equals', 'value': 'rabbitmq-config'},
+                        {'op': 'check', 'path': '/metadata/namespace', 'cmp': 'equals', 'value': 'test-rabbitmq'},
+                        {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('config')},
+                        {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
+                        {'op': 'replace', 'path': '/data/enabled_plugins', 'value': LiteralStr('[{}].'.format(', '.join(self.option_get('config.enabled_plugins'))))},
+                        {'op': 'replace', 'path': '/data/rabbitmq.conf', 'value': LiteralStr(self.configfile_get())},
+                    ], in_place=False), name=self.BUILDITEM_CONFIG, source=self.SOURCE_NAME, instance=self.basename())
+                ret.append(ritem)
 
         config_secret = {}
 
@@ -328,151 +331,152 @@ class RabbitMQOnlineBuilder(Builder):
 
         ret = []
 
-        for item in self._downloadedfiles['headless-service.yaml']:
-            ritem = item
-            if ritem['kind'] == 'Service':
-                ritem = Object(jsonpatchext.apply_patch(ritem, [
-                    {'op': 'check', 'path': '/metadata/name', 'cmp': 'equals', 'value': 'rabbitmq-headless'},
-                    {'op': 'check', 'path': '/metadata/namespace', 'cmp': 'equals', 'value': 'test-rabbitmq'},
-                    {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('service-headless')},
-                    {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
-                    {'op': 'replace', 'path': '/spec/selector/app', 'value': self.object_name('pod-label-app')},
-                ], in_place=False), name=self.BUILDITEM_SERVICE_HEADLESS, source=self.SOURCE_NAME, instance=self.basename())
-            ret.append(ritem)
+        if self._downloadedfiles is not None:
+            for item in self._downloadedfiles['headless-service.yaml']:
+                ritem = item
+                if ritem['kind'] == 'Service':
+                    ritem = Object(jsonpatchext.apply_patch(ritem, [
+                        {'op': 'check', 'path': '/metadata/name', 'cmp': 'equals', 'value': 'rabbitmq-headless'},
+                        {'op': 'check', 'path': '/metadata/namespace', 'cmp': 'equals', 'value': 'test-rabbitmq'},
+                        {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('service-headless')},
+                        {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
+                        {'op': 'replace', 'path': '/spec/selector/app', 'value': self.object_name('pod-label-app')},
+                    ], in_place=False), name=self.BUILDITEM_SERVICE_HEADLESS, source=self.SOURCE_NAME, instance=self.basename())
+                ret.append(ritem)
 
-        for item in self._downloadedfiles['statefulset.yaml']:
-            ritem = item
-            if ritem['kind'] == 'StatefulSet':
-                ritempatch = [
-                    {'op': 'check', 'path': '/metadata/name', 'cmp': 'equals', 'value': 'rabbitmq'},
-                    {'op': 'check', 'path': '/metadata/namespace', 'cmp': 'equals', 'value': 'test-rabbitmq'},
-                    {'op': 'check', 'path': '/spec/template/spec/initContainers/0/image', 'cmp': 'startswith', 'value': 'busybox'},
-                    {'op': 'check', 'path': '/spec/template/spec/volumes/2/name', 'cmp': 'equals', 'value': 'rabbitmq-data'},
-                    {'op': 'check', 'path': '/spec/template/spec/containers/0/image', 'cmp': 'startswith', 'value': 'rabbitmq'},
-                    {'op': 'check', 'path': '/spec/template/spec/containers/0/env/0/name', 'cmp': 'equals', 'value': 'RABBITMQ_DEFAULT_PASS'},
-                    {'op': 'check', 'path': '/spec/template/spec/containers/0/env/1/name', 'cmp': 'equals', 'value': 'RABBITMQ_DEFAULT_USER'},
-                    {'op': 'check', 'path': '/spec/template/spec/containers/0/env/2/name', 'cmp': 'equals','value': 'RABBITMQ_ERLANG_COOKIE'},
-                    {'op': 'check', 'path': '/spec/template/spec/containers/0/ports/2/name', 'cmp': 'equals', 'value': 'prometheus'},
+            for item in self._downloadedfiles['statefulset.yaml']:
+                ritem = item
+                if ritem['kind'] == 'StatefulSet':
+                    ritempatch = [
+                        {'op': 'check', 'path': '/metadata/name', 'cmp': 'equals', 'value': 'rabbitmq'},
+                        {'op': 'check', 'path': '/metadata/namespace', 'cmp': 'equals', 'value': 'test-rabbitmq'},
+                        {'op': 'check', 'path': '/spec/template/spec/initContainers/0/image', 'cmp': 'startswith', 'value': 'busybox'},
+                        {'op': 'check', 'path': '/spec/template/spec/volumes/2/name', 'cmp': 'equals', 'value': 'rabbitmq-data'},
+                        {'op': 'check', 'path': '/spec/template/spec/containers/0/image', 'cmp': 'startswith', 'value': 'rabbitmq'},
+                        {'op': 'check', 'path': '/spec/template/spec/containers/0/env/0/name', 'cmp': 'equals', 'value': 'RABBITMQ_DEFAULT_PASS'},
+                        {'op': 'check', 'path': '/spec/template/spec/containers/0/env/1/name', 'cmp': 'equals', 'value': 'RABBITMQ_DEFAULT_USER'},
+                        {'op': 'check', 'path': '/spec/template/spec/containers/0/env/2/name', 'cmp': 'equals','value': 'RABBITMQ_ERLANG_COOKIE'},
+                        {'op': 'check', 'path': '/spec/template/spec/containers/0/ports/2/name', 'cmp': 'equals', 'value': 'prometheus'},
 
-                    {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('statefulset')},
-                    {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
-                    {'op': 'merge', 'path': '/metadata', 'value': {'labels': {}}},
-                    {'op': 'merge', 'path': '/metadata/labels', 'value': {'app': self.object_name('pod-label-app')}},
-                    {'op': 'replace', 'path': '/spec/selector/matchLabels/app', 'value': self.object_name('pod-label-app')},
-                    {'op': 'replace', 'path': '/spec/serviceName', 'value': self.object_name('service-headless')},
-                    {'op': 'remove', 'path': '/spec/volumeClaimTemplates'},
+                        {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('statefulset')},
+                        {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
+                        {'op': 'merge', 'path': '/metadata', 'value': {'labels': {}}},
+                        {'op': 'merge', 'path': '/metadata/labels', 'value': {'app': self.object_name('pod-label-app')}},
+                        {'op': 'replace', 'path': '/spec/selector/matchLabels/app', 'value': self.object_name('pod-label-app')},
+                        {'op': 'replace', 'path': '/spec/serviceName', 'value': self.object_name('service-headless')},
+                        {'op': 'remove', 'path': '/spec/volumeClaimTemplates'},
 
-                    {'op': 'replace', 'path': '/spec/template/metadata/name', 'value': self.object_name('pod-label-app')},
-                    {'op': 'replace', 'path': '/spec/template/metadata/namespace', 'value': self.namespace()},
-                    {'op': 'replace', 'path': '/spec/template/metadata/labels/app', 'value': self.object_name('pod-label-app')},
-                    {'op': 'replace', 'path': '/spec/template/spec/serviceAccount',
-                        'value': ValueData(value=self.object_name('service-account'),
-                                           enabled=self.object_name('service-account') is not None)},
-                    {'op': 'replace', 'path': '/spec/template/spec/volumes/2',
-                     'value': KDataHelper_Volume.info(base_value={
-                            'name': 'rabbitmq-data',
-                    }, value=self.option_get('kubernetes.volumes.data'))},
-                    {
-                        'op': 'replace', 'path': '/spec/template/spec/containers/0/env/0',
-                        'value': KDataHelper_Env.info(base_value={
-                            'name': 'RABBITMQ_DEFAULT_PASS'
-                        }, value=self.option_get('config.admin.password'), default_value={
-                            'valueFrom': {
-                                'secretKeyRef': {
-                                    'name': self.object_name('config-secret'),
-                                    'key': 'admin.password'
+                        {'op': 'replace', 'path': '/spec/template/metadata/name', 'value': self.object_name('pod-label-app')},
+                        {'op': 'replace', 'path': '/spec/template/metadata/namespace', 'value': self.namespace()},
+                        {'op': 'replace', 'path': '/spec/template/metadata/labels/app', 'value': self.object_name('pod-label-app')},
+                        {'op': 'replace', 'path': '/spec/template/spec/serviceAccount',
+                            'value': ValueData(value=self.object_name('service-account'),
+                                               enabled=self.object_name('service-account') is not None)},
+                        {'op': 'replace', 'path': '/spec/template/spec/volumes/2',
+                         'value': KDataHelper_Volume.info(base_value={
+                                'name': 'rabbitmq-data',
+                        }, value=self.option_get('kubernetes.volumes.data'))},
+                        {
+                            'op': 'replace', 'path': '/spec/template/spec/containers/0/env/0',
+                            'value': KDataHelper_Env.info(base_value={
+                                'name': 'RABBITMQ_DEFAULT_PASS'
+                            }, value=self.option_get('config.admin.password'), default_value={
+                                'valueFrom': {
+                                    'secretKeyRef': {
+                                        'name': self.object_name('config-secret'),
+                                        'key': 'admin.password'
+                                    }
+                                },
+                            })
+                        },
+                        {
+                            'op': 'replace', 'path': '/spec/template/spec/containers/0/env/1',
+                            'value': KDataHelper_Env.info(base_value={
+                                'name': 'RABBITMQ_DEFAULT_USER'
+                            }, value=self.option_get('config.admin.username'), default_value={
+                                'valueFrom': {
+                                    'secretKeyRef': {
+                                        'name': self.object_name('config-secret'),
+                                        'key': 'admin.username'
+                                    }
+                                },
+                            })
+                        },
+                        {
+                            'op': 'replace', 'path': '/spec/template/spec/containers/0/env/2',
+                            'value': KDataHelper_Env.info(base_value={
+                                'name': 'RABBITMQ_ERLANG_COOKIE'
+                            }, value=self.option_get('config.erlang_cookie'), default_value={
+                                'valueFrom': {
+                                    'secretKeyRef': {
+                                        'name': self.object_name('config-secret'),
+                                        'key': 'erlang_cookie'
+                                    }
+                                },
+                            })
+                        },
+                        {
+                            'op': 'add', 'path': '/spec/template/spec/containers/0/resources',
+                            'value': ValueData(value=self.option_get('kubernetes.resources.statefulset'), disabled_if_none=True),
+                        },
+                    ]
+
+                    if self.option_get('container.busybox') is not None:
+                        ritempatch.append({'op': 'replace', 'path': '/spec/template/spec/initContainers/0/image', 'value': self.option_get('container.busybox')})
+                    if self.option_get('container.rabbitmq') is not None:
+                        ritempatch.append({'op': 'replace', 'path': '/spec/template/spec/containers/0/image', 'value': self.option_get('container.rabbitmq')})
+                    if self.option_get('config.enable_prometheus') is False:
+                        ritempatch.append({'op': 'remove', 'path': '/spec/template/spec/containers/0/ports/2'})
+                    if self.option_get('config.enable_prometheus') is not False and self.option_get('config.prometheus_annotation') is not False:
+                        ritempatch.append({'op': 'merge', 'path': '/spec/template/metadata', 'value': {'annotations': {
+                            'prometheus.io/scrape': QuotedStr('true'),
+                            'prometheus.io/path': QuotedStr('/metrics'),
+                            'prometheus.io/port': QuotedStr('15692'),
+                        }}})
+                    if self.option_get('config.load_definitions') is not None:
+                        ritempatch.append({
+                            'op': 'add', 'path': '/spec/template/spec/volumes',
+                            'value': KDataHelper_Volume.info(base_value={
+                                'name': 'rabbitmq-config-load-definition',
+                            }, value_if_kdata=self.option_get('config.load_definitions'), default_value={
+                                'secret': {
+                                    'secretName': self.object_name('config-secret'),
+                                    'items': [{
+                                        'key': 'load_definition.json',
+                                        'path': 'load_definition.json',
+                                    }]
                                 }
-                            },
+                            }, key_path='load_definition.json')
                         })
-                    },
-                    {
-                        'op': 'replace', 'path': '/spec/template/spec/containers/0/env/1',
-                        'value': KDataHelper_Env.info(base_value={
-                            'name': 'RABBITMQ_DEFAULT_USER'
-                        }, value=self.option_get('config.admin.username'), default_value={
-                            'valueFrom': {
-                                'secretKeyRef': {
-                                    'name': self.object_name('config-secret'),
-                                    'key': 'admin.username'
-                                }
-                            },
-                        })
-                    },
-                    {
-                        'op': 'replace', 'path': '/spec/template/spec/containers/0/env/2',
-                        'value': KDataHelper_Env.info(base_value={
-                            'name': 'RABBITMQ_ERLANG_COOKIE'
-                        }, value=self.option_get('config.erlang_cookie'), default_value={
-                            'valueFrom': {
-                                'secretKeyRef': {
-                                    'name': self.object_name('config-secret'),
-                                    'key': 'erlang_cookie'
-                                }
-                            },
-                        })
-                    },
-                    {
-                        'op': 'add', 'path': '/spec/template/spec/containers/0/resources',
-                        'value': ValueData(value=self.option_get('kubernetes.resources.statefulset'), disabled_if_none=True),
-                    },
-                ]
-
-                if self.option_get('container.busybox') is not None:
-                    ritempatch.append({'op': 'replace', 'path': '/spec/template/spec/initContainers/0/image', 'value': self.option_get('container.busybox')})
-                if self.option_get('container.rabbitmq') is not None:
-                    ritempatch.append({'op': 'replace', 'path': '/spec/template/spec/containers/0/image', 'value': self.option_get('container.rabbitmq')})
-                if self.option_get('config.enable_prometheus') is False:
-                    ritempatch.append({'op': 'remove', 'path': '/spec/template/spec/containers/0/ports/2'})
-                if self.option_get('config.enable_prometheus') is not False and self.option_get('config.prometheus_annotation') is not False:
-                    ritempatch.append({'op': 'merge', 'path': '/spec/template/metadata', 'value': {'annotations': {
-                        'prometheus.io/scrape': QuotedStr('true'),
-                        'prometheus.io/path': QuotedStr('/metrics'),
-                        'prometheus.io/port': QuotedStr('15692'),
-                    }}})
-                if self.option_get('config.load_definitions') is not None:
-                    ritempatch.append({
-                        'op': 'add', 'path': '/spec/template/spec/volumes',
-                        'value': KDataHelper_Volume.info(base_value={
+                        ritempatch.append({'op': 'add', 'path': '/spec/template/spec/containers/0/volumeMounts', 'value': {
                             'name': 'rabbitmq-config-load-definition',
-                        }, value_if_kdata=self.option_get('config.load_definitions'), default_value={
-                            'secret': {
-                                'secretName': self.object_name('config-secret'),
-                                'items': [{
-                                    'key': 'load_definition.json',
-                                    'path': 'load_definition.json',
-                                }]
-                            }
-                        }, key_path='load_definition.json')
-                    })
-                    ritempatch.append({'op': 'add', 'path': '/spec/template/spec/containers/0/volumeMounts', 'value': {
-                        'name': 'rabbitmq-config-load-definition',
-                        'mountPath': '/etc/rabbitmq-load-definition',
-                        'readOnly': True,
-                    }})
+                            'mountPath': '/etc/rabbitmq-load-definition',
+                            'readOnly': True,
+                        }})
 
-                ritem = Object(jsonpatchext.apply_patch(ritem, ritempatch, in_place=False),
-                               name=self.BUILDITEM_STATEFULSET, source=self.SOURCE_NAME, instance=self.basename())
-            ret.append(ritem)
+                    ritem = Object(jsonpatchext.apply_patch(ritem, ritempatch, in_place=False),
+                                   name=self.BUILDITEM_STATEFULSET, source=self.SOURCE_NAME, instance=self.basename())
+                ret.append(ritem)
 
-        for item in self._downloadedfiles['client-service.yaml']:
-            ritem = item
-            if ritem['kind'] == 'Service':
-                ritempatch = [
-                    {'op': 'check', 'path': '/metadata/name', 'cmp': 'equals', 'value': 'rabbitmq-client'},
-                    {'op': 'check', 'path': '/metadata/namespace', 'cmp': 'equals', 'value': 'test-rabbitmq'},
-                    {'op': 'check', 'path': '/spec/ports/1/name', 'cmp': 'equals', 'value': 'prometheus'},
+            for item in self._downloadedfiles['client-service.yaml']:
+                ritem = item
+                if ritem['kind'] == 'Service':
+                    ritempatch = [
+                        {'op': 'check', 'path': '/metadata/name', 'cmp': 'equals', 'value': 'rabbitmq-client'},
+                        {'op': 'check', 'path': '/metadata/namespace', 'cmp': 'equals', 'value': 'test-rabbitmq'},
+                        {'op': 'check', 'path': '/spec/ports/1/name', 'cmp': 'equals', 'value': 'prometheus'},
 
-                    {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('service')},
-                    {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
-                    {'op': 'replace', 'path': '/metadata/labels/app', 'value': self.object_name('pod-label-app')},
-                    {'op': 'replace', 'path': '/spec/type', 'value': self.option_get('config.servicetype')},
-                    {'op': 'replace', 'path': '/spec/selector/app', 'value': self.object_name('pod-label-app')},
-                ]
-                if self.option_get('config.enable_prometheus') is False:
-                    ritempatch.append({'op': 'remove', 'path': '/spec/ports/1'})
-                ritem = Object(jsonpatchext.apply_patch(ritem, ritempatch, in_place=False),
-                               name=self.BUILDITEM_SERVICE, source=self.SOURCE_NAME, instance=self.basename())
-            ret.append(ritem)
+                        {'op': 'replace', 'path': '/metadata/name', 'value': self.object_name('service')},
+                        {'op': 'replace', 'path': '/metadata/namespace', 'value': self.namespace()},
+                        {'op': 'replace', 'path': '/metadata/labels/app', 'value': self.object_name('pod-label-app')},
+                        {'op': 'replace', 'path': '/spec/type', 'value': self.option_get('config.servicetype')},
+                        {'op': 'replace', 'path': '/spec/selector/app', 'value': self.object_name('pod-label-app')},
+                    ]
+                    if self.option_get('config.enable_prometheus') is False:
+                        ritempatch.append({'op': 'remove', 'path': '/spec/ports/1'})
+                    ritem = Object(jsonpatchext.apply_patch(ritem, ritempatch, in_place=False),
+                                   name=self.BUILDITEM_SERVICE, source=self.SOURCE_NAME, instance=self.basename())
+                ret.append(ritem)
 
         self._check_object_must_have(ret, [self.BUILDITEM_SERVICE_HEADLESS, self.BUILDITEM_STATEFULSET,
                                            self.BUILDITEM_SERVICE], 'headless-service.yaml, statefulset.yaml, client-service.yaml')
