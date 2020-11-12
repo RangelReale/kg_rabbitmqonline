@@ -3,6 +3,7 @@ from typing import Any, Optional, Mapping
 from kubragen.builder import Builder
 from kubragen.configfile import ConfigFile, ConfigFileOutput, ConfigFileOutput_DictSingleLevel
 from kubragen.exception import InvalidParamError
+from kubragen.merger import Merger
 from kubragen.option import OptionDef
 from kubragen.options import OptionGetter, Options, option_root_get
 
